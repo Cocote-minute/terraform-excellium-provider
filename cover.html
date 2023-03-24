@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>class: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">demo-xml/src/class/interface.go (0.0%)</option>
+				
+				<option value="file1">demo-xml/src/class/tag.go (56.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package class
+
+import (
+        "fmt"
+
+        "github.com/scottdware/go-panos"
+)
+
+type FWObj interface {
+        ToXML() string
+        GetXpath() string
+        GetName() string
+}
+
+func FWAddObject(pan *panos.PaloAlto, obj FWObj) error <span class="cov0" title="0">{
+        err := pan.XpathConfig("edit",fmt.Sprintf(obj.GetXpath() + "/entry[@name='%s']"),obj.ToXML())
+        if(err != nil) </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func Delete(pan *panos.PaloAlto, obj FWObj) error <span class="cov0" title="0">{
+        err := pan.XpathConfig("delete",fmt.Sprintf(obj.GetXpath() + "/entry[@name='%s']",obj.GetName()), obj.ToXML())
+        if(err != nil) </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}</pre>
+		
+		<pre class="file" id="file1" style="display: none">package class
+
+import (
+        "encoding/xml"
+        "errors"
+        "fmt"
+
+        "github.com/scottdware/go-panos"
+)
+
+const(
+        xpath = "/config/devices/entry/vsys/entry/tag"
+)
+
+type Tag struct {
+        XMLName xml.Name `xml:"entry"`
+
+        Xpath string `xml:"-"`
+        Id string `xml:"-"`
+        Name     string `xml:"name,attr"`
+        Color    string `xml:"color,omitempty"`
+        Comments string `xml:"comments,omitempty"`
+}
+
+type ResultListOfTags struct {
+        Tags []Tag `xml:"tag&gt;entry"`
+}
+
+func (t *Tag)Flatten() []interface{} <span class="cov0" title="0">{
+        c := make(map[string]interface{}, 0)
+        c["name"] = t.Name
+        c["color"] = t.Color
+        c["comments"] = t.Comments
+        return []interface{}{c}
+}</span>
+
+func (t *Tag) ToXML() string <span class="cov8" title="1">{
+        result, err := xml.Marshal(t)
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Println("Error",err)
+                return ""
+        }</span>
+        <span class="cov8" title="1">return string(result)</span>
+}
+
+func (t *Tag) ToString() string <span class="cov0" title="0">{
+        return t.Xpath + "\n" + t.ToXML()
+}</span>
+
+func (t *Tag) GetXpath() string <span class="cov0" title="0">{
+        return t.Xpath
+}</span>
+
+func (t *Tag) GetName() string <span class="cov0" title="0">{
+        return t.Name
+}</span>
+
+func (t *Tag) Add(pan *panos.PaloAlto) error <span class="cov8" title="1">{
+        err := pan.XpathConfig("edit",fmt.Sprintf(xpath + "/entry[@name='%s']",t.Name),t.ToXML())
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Println(t.Xpath + "/entry[@name='%s']",t.Name)
+                fmt.Println(t.ToXML())
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *Tag) Edit(pan *panos.PaloAlto) error <span class="cov8" title="1">{
+        if(t.Id != t.Name) </span><span class="cov8" title="1">{
+                err := t.Delete(pan)
+                if(err != nil) </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">t.Id = t.Name
+                t.Add(pan)</span>
+        }
+        <span class="cov8" title="1">err := pan.XpathConfig("edit",fmt.Sprintf(xpath + "/entry[@name='%s']",t.Name),t.ToXML())
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Printf(xpath + "/entry[@name='%s']\n",t.Name)
+                fmt.Println(t.ToXML())
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (t *Tag) Delete(pan *panos.PaloAlto) error <span class="cov8" title="1">{
+        err := pan.XpathConfig("delete",fmt.Sprintf(xpath + "/entry[@name='%s']",t.Id),t.ToXML())
+        if(err != nil) </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func SearchTag(name string, pan *panos.PaloAlto) (Tag, error) <span class="cov8" title="1">{
+        result, err := pan.XpathGetConfig("candidate",xpath)
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Println("Error",err)
+                return Tag{}, err
+        }</span>
+        <span class="cov8" title="1">ResponseTag := Response[ResultListOfTags]{}
+        err = xml.Unmarshal([]byte(result), &amp;ResponseTag)
+        if(err != nil) </span><span class="cov0" title="0">{
+                fmt.Println("Error",err)
+                return Tag{}, err
+        }</span>
+        <span class="cov8" title="1">for _, tag := range ResponseTag.Response.Tags </span><span class="cov8" title="1">{
+                if tag.Name == name </span><span class="cov8" title="1">{
+                        return tag, nil
+                }</span>
+        }
+        <span class="cov8" title="1">return Tag{}, errors.New("Tag not found")</span> 
+}
+
+func CheckIfTagExist(name string, pan *panos.PaloAlto) bool <span class="cov8" title="1">{
+        _, err := SearchTag(name, pan)
+        return err == nil
+}</span>
+
+func CreateTagClass(name string, color string, comments string) Tag <span class="cov8" title="1">{
+        return Tag{
+                Xpath: xpath,
+                Name: name,
+                Color: color,
+                Comments: comments,
+                Id: name,
+        }
+}</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
